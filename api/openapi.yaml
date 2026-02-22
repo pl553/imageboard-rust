@@ -1,0 +1,608 @@
+openapi: 3.1.0
+info:
+  title: Imageboard API
+  description: Anonymous imageboard forum with thematic boards
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: boards
+    description: Board management
+  - name: threads
+    description: Thread operations
+  - name: posts
+    description: Post/comment operations
+  - name: admin
+    description: Admin operations
+  - name: auth
+    description: Authentication
+
+paths:
+  # ============ BOARDS ============
+  /boards:
+    get:
+      tags: [boards]
+      summary: List all boards
+      operationId: listBoards
+      responses:
+        '200':
+          description: List of boards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Board'
+
+    post:
+      tags: [boards, admin]
+      summary: Create a board (admin only)
+      operationId: createBoard
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBoardRequest'
+      responses:
+        '201':
+          description: Board created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Board with this slug already exists
+
+  /boards/{slug}:
+    parameters:
+      - $ref: '#/components/parameters/BoardSlug'
+
+    get:
+      tags: [boards]
+      summary: Get board info
+      operationId: getBoard
+      responses:
+        '200':
+          description: Board details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [boards, admin]
+      summary: Delete a board (admin only)
+      operationId: deleteBoard
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Board deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============ THREADS ============
+  /boards/{slug}/threads:
+    parameters:
+      - $ref: '#/components/parameters/BoardSlug'
+
+    get:
+      tags: [threads]
+      summary: List threads on a board (paginated, with preview of last N posts)
+      operationId: listThreads
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: preview_posts
+          in: query
+          description: Number of last posts to include per thread
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+            default: 3
+      responses:
+        '200':
+          description: Paginated thread list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [threads]
+      summary: Create a new thread
+      operationId: createThread
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateThreadRequest'
+      responses:
+        '201':
+          description: Thread created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thread'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /threads/{thread_id}:
+    parameters:
+      - $ref: '#/components/parameters/ThreadId'
+
+    get:
+      tags: [threads]
+      summary: Get thread with all posts
+      operationId: getThread
+      responses:
+        '200':
+          description: Thread with posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [threads, admin]
+      summary: Delete a thread (admin only)
+      operationId: deleteThread
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Thread deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============ POSTS ============
+  /threads/{thread_id}/posts:
+    parameters:
+      - $ref: '#/components/parameters/ThreadId'
+
+    post:
+      tags: [posts]
+      summary: Create a post (reply) in a thread
+      operationId: createPost
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /posts/{post_id}:
+    parameters:
+      - $ref: '#/components/parameters/PostId'
+
+    delete:
+      tags: [posts, admin]
+      summary: Delete a post (admin only)
+      operationId: deletePost
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Post deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============ AUTH ============
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Admin login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Admin logout
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+
+  # ============ IMAGES ============
+  /images/{filename}:
+    get:
+      tags: [images]
+      summary: Get full image
+      operationId: getImage
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image file
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /images/thumb/{filename}:
+    get:
+      tags: [images]
+      summary: Get thumbnail image
+      operationId: getThumbnail
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thumbnail image file
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    BoardSlug:
+      name: slug
+      in: path
+      required: true
+      description: Board URL slug (e.g., "b", "tv", "g")
+      schema:
+        type: string
+        pattern: '^[a-z0-9]+$'
+        minLength: 1
+        maxLength: 10
+
+    ThreadId:
+      name: thread_id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+    PostId:
+      name: post_id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    # ---- Board ----
+    Board:
+      type: object
+      required: [id, slug, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        slug:
+          type: string
+          example: "tv"
+        name:
+          type: string
+          example: "Television & Film"
+        description:
+          type: string
+        thread_count:
+          type: integer
+
+    CreateBoardRequest:
+      type: object
+      required: [slug, name]
+      properties:
+        slug:
+          type: string
+          pattern: '^[a-z0-9]+$'
+          minLength: 1
+          maxLength: 10
+          example: "tv"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Television & Film"
+        description:
+          type: string
+          maxLength: 500
+
+    # ---- Thread ----
+    Thread:
+      type: object
+      required: [id, board_slug, op_post, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        board_slug:
+          type: string
+        op_post:
+          $ref: '#/components/schemas/Post'
+        post_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        bumped_at:
+          type: string
+          format: date-time
+
+    ThreadPreview:
+      type: object
+      required: [id, board_slug, op_post, post_count, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        board_slug:
+          type: string
+        op_post:
+          $ref: '#/components/schemas/Post'
+        post_count:
+          type: integer
+        omitted_posts:
+          type: integer
+          description: Number of posts not shown in preview
+        last_posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        created_at:
+          type: string
+          format: date-time
+        bumped_at:
+          type: string
+          format: date-time
+
+    ThreadDetail:
+      type: object
+      required: [id, board_slug, op_post, posts, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        board_slug:
+          type: string
+        op_post:
+          $ref: '#/components/schemas/Post'
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        created_at:
+          type: string
+          format: date-time
+        bumped_at:
+          type: string
+          format: date-time
+
+    ThreadListResponse:
+      type: object
+      required: [threads, pagination]
+      properties:
+        threads:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreadPreview'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateThreadRequest:
+      type: object
+      required: [text]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          default: "Anonymous"
+        text:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        image:
+          type: string
+          format: binary
+
+    # ---- Post ----
+    Post:
+      type: object
+      required: [id, thread_id, name, text, created_at]
+      properties:
+        id:
+          type: integer
+          format: int64
+        thread_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: "Anonymous"
+        text:
+          type: string
+        image:
+          $ref: '#/components/schemas/ImageInfo'
+        created_at:
+          type: string
+          format: date-time
+
+    CreatePostRequest:
+      type: object
+      required: [text]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          default: "Anonymous"
+        text:
+          type: string
+          minLength: 1
+          maxLength: 10000
+        image:
+          type: string
+          format: binary
+
+    ImageInfo:
+      type: object
+      required: [filename, thumbnail_filename, original_name]
+      properties:
+        filename:
+          type: string
+          description: Stored filename for full image
+        thumbnail_filename:
+          type: string
+          description: Stored filename for thumbnail
+        original_name:
+          type: string
+          description: Original uploaded filename
+        size:
+          type: integer
+          description: File size in bytes
+        width:
+          type: integer
+        height:
+          type: integer
+
+    # ---- Auth ----
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: JWT token
+        expires_at:
+          type: string
+          format: date-time
+
+    # ---- Common ----
+    Pagination:
+      type: object
+      required: [page, limit, total_items, total_pages]
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
