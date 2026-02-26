@@ -253,17 +253,56 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/Unauthorized'
 
-  /auth/logout:
-    post:
+  /auth/me:
+    get:
       tags: [auth]
-      summary: Admin logout
-      operationId: logout
+      summary: Get current admin info (verify token)
+      operationId: getCurrentAdmin
       security:
         - bearerAuth: []
       responses:
+        '200':
+          description: Current admin info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminInfo'
+        '401':
+          description: Not authenticated
+
+  /auth/change-password:
+    post:
+      tags: [auth]
+      summary: Change current admin's password
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
         '204':
-          description: Logged out
+          description: Password changed successfully
+        '400':
+          description: Invalid request (weak password, same as old, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Current password incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/responses/BadRequest'
 
   # ============ IMAGES ============
   /images/{filename}:
@@ -547,9 +586,11 @@ components:
       properties:
         username:
           type: string
+          minLength: 1
         password:
           type: string
           format: password
+          minLength: 1
 
     LoginResponse:
       type: object
@@ -558,7 +599,26 @@ components:
         token:
           type: string
           description: JWT token
-        expires_at:
+
+    ChangePasswordRequest:
+      type: object
+      required: [new_password]
+      properties:
+        new_password:
+          type: string
+          format: password
+          minLength: 8
+
+    AdminInfo:
+      type: object
+      required: [id, username]
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        created_at:
           type: string
           format: date-time
 
