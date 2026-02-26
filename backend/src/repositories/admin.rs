@@ -11,4 +11,10 @@ pub trait AdminRepository: Send + Sync {
 
     /// Create admin account
     async fn create(&self, username: &str, password_hash: &str) -> DomainResult<Admin>;
+    
+    /// Change admin password
+    async fn change_password(&self, id: i64, new_password_hash: &str) -> DomainResult<()>;
+
+    /// Check if any admin exists
+    async fn exists_any(&self) -> DomainResult<bool>;
 }

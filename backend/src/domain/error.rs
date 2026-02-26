@@ -16,9 +16,12 @@ pub enum DomainError {
     #[error("Image not found: {0}")]
     ImageNotFound(String),
 
+    #[error("Admin not found: {0}")]
+    AdminNotFound(i64),
+
     // ---- Conflict ----
-    #[error("Board already exists: {0}")]
-    BoardAlreadyExists(String),
+    #[error("Already exists: {0}")]
+    AlreadyExists(String),
 
     // ---- Validation ----
     #[error("Validation error: {0}")]

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
 # Async
 tokio = { version = "1", features = ["full"] }
 async-trait = "0.1"
@@ -34,3 +35,9 @@ image = "0.25"
 
 # Utils
 uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+testcontainers = "0.23"
+testcontainers-modules = { version = "0.11", features = ["postgres"] }
+uuid = { version = "1", features = ["v4"] }
+tokio = { version = "1", features = ["full", "test-util"] }
