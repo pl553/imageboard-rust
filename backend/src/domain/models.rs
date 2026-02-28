@@ -23,48 +23,61 @@ pub struct CreateBoard {
 // ============ THREAD ============
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Thread {
-    pub id: i64,
-    pub board_id: i64,
-    pub board_slug: String,
-    pub created_at: DateTime<Utc>,
-    pub bumped_at: DateTime<Utc>,
-    pub post_count: i32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadPreview {
-    pub thread: Thread,
-    pub op_post: Post,
-    pub last_posts: Vec<Post>,
-    pub omitted_posts: i32,
+    pub op: Post,
+    pub reply_count: i64,
+    pub omitted_count: i64,
+    pub last_replies: Vec<Post>,
+    pub bumped_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThreadDetail {
-    pub thread: Thread,
-    pub op_post: Post,
-    pub posts: Vec<Post>,
-}
-
-#[derive(Debug, Clone)]
-pub struct CreateThread {
-    pub name: String,
-    pub text: String,
-    pub image: Option<ImageData>,
+    pub op: Post,
+    pub replies: Vec<Post>,
 }
 
 // ============ POST ============
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct PostId {
+    pub board_id: i64,
+    pub post_number: i64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Post {
-    pub id: i64,
-    pub thread_id: i64,
+    pub board_id: i64,
+    pub post_number: i64,
+    pub parent_number: Option<i64>,
     pub name: String,
     pub text: String,
     pub image: Option<ImageInfo>,
-    pub is_op: bool,
     pub created_at: DateTime<Utc>,
+}
+
+impl Post {
+    pub fn id(&self) -> PostId {
+        PostId {
+            board_id: self.board_id,
+            post_number: self.post_number,
+        }
+    }
+    
+    pub fn is_op(&self) -> bool {
+        self.parent_number.is_none()
+    }
+    
+    pub fn thread_number(&self) -> i64 {
+        self.parent_number.unwrap_or(self.post_number)
+    }
+    
+    pub fn thread_id(&self) -> PostId {
+        PostId {
+            board_id: self.board_id,
+            post_number: self.thread_number(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

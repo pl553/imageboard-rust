@@ -20,10 +20,4 @@ pub trait BoardRepository: Send + Sync {
 
     /// Check if board exists by slug
     async fn exists(&self, slug: &str) -> DomainResult<bool>;
-
-    /// Increment thread count
-    async fn increment_thread_count(&self, board_id: i64) -> DomainResult<()>;
-
-    /// Decrement thread count
-    async fn decrement_thread_count(&self, board_id: i64) -> DomainResult<()>;
 }

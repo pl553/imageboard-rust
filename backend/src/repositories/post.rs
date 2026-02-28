@@ -1,40 +1,56 @@
 use async_trait::async_trait;
-use crate::domain::{Post, ImageInfo, DomainResult};
+use crate::domain::{Paginated, Post, PostId, ThreadPreview, ThreadDetail, ImageInfo, DomainResult};
 
 #[async_trait]
 pub trait PostRepository: Send + Sync {
     /// Find post by ID
-    async fn find_by_id(&self, id: i64) -> DomainResult<Option<Post>>;
+    async fn find_by_id(&self, id: PostId) -> DomainResult<Option<Post>>;
 
-    /// Find OP (first post) of a thread
-    async fn find_op_by_thread_id(&self, thread_id: i64) -> DomainResult<Option<Post>>;
-
-    /// Find all posts in a thread (excluding OP)
-    async fn find_by_thread_id(&self, thread_id: i64) -> DomainResult<Vec<Post>>;
-
-    /// Find last N posts in a thread (for preview, excluding OP)
-    async fn find_last_n_by_thread_id(
+    /// Create a thread
+    async fn create_thread(
         &self,
-        thread_id: i64,
-        n: u32,
-    ) -> DomainResult<Vec<Post>>;
-
-    /// Count posts in a thread (excluding OP)
-    async fn count_by_thread_id(&self, thread_id: i64) -> DomainResult<u64>;
-
-    /// Create a post
-    async fn create(
-        &self,
-        thread_id: i64,
+        board_id: i64,
         name: &str,
         text: &str,
         image: Option<&ImageInfo>,
-        is_op: bool,
     ) -> DomainResult<Post>;
 
-    /// Delete post by ID (returns deleted post's image info if any)
-    async fn delete(&self, id: i64) -> DomainResult<Option<ImageInfo>>;
+    /// Create a reply to a thread
+    async fn create_reply(
+        &self,
+        board_id: i64,
+        parent_number: i64,
+        name: &str,
+        text: &str,
+        image: Option<&ImageInfo>,
+    ) -> DomainResult<Post>;
 
-    /// Delete all posts in a thread (returns image infos for cleanup)
-    async fn delete_by_thread_id(&self, thread_id: i64) -> DomainResult<Vec<ImageInfo>>;
+    /// Delete post
+    async fn delete(&self, id: PostId) -> DomainResult<()>;
+    
+    // ---- Thread queries ----
+    
+    /// Get thread list for board page (paginated, with last N replies per thread)
+    async fn find_thread_previews(
+        &self,
+        board_id: i64,
+        page: u32,
+        limit: u32,
+        preview_replies: u32,
+    ) -> DomainResult<Paginated<ThreadPreview>>;
+    
+    /// Get full thread with all replies
+    async fn find_thread_detail(&self, thread: PostId) -> DomainResult<Option<ThreadDetail>>;
+    
+    /// Count threads on a board
+    async fn count_threads(&self, board_id: i64) -> DomainResult<u64>;
+    
+    /// Delete all posts on a board
+    async fn delete_by_board(&self, board_id: i64) -> DomainResult<()>;
+    
+    // ============ CHECKS ============
+    
+    async fn exists(&self, id: PostId) -> DomainResult<bool>;
+    
+    async fn is_thread(&self, id: PostId) -> DomainResult<bool>;
 }
