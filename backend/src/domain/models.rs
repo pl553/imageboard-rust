@@ -92,7 +92,6 @@ pub struct CreatePost {
 /// Stored image metadata (from database)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageInfo {
-    pub id: i64,
     pub filename: String,
     pub thumbnail_filename: String,
     pub original_name: String,

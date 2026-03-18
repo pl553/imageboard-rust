@@ -16,6 +16,10 @@ CREATE TABLE posts (
     image_filename VARCHAR(255),
     image_thumbnail VARCHAR(255),
     image_original_name VARCHAR(255),
+    image_size_bytes BIGINT,
+    image_width INTEGER,
+    image_height INTEGER,
+    image_mime_type VARCHAR(50),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     PRIMARY KEY (board_id, post_number),
