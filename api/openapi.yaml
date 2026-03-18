@@ -155,9 +155,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /threads/{thread_id}:
+  /boards/{slug}/threads/{thread_number}:
     parameters:
-      - $ref: '#/components/parameters/ThreadId'
+      - $ref: '#/components/parameters/BoardSlug'
+      - $ref: '#/components/parameters/ThreadNumber'
 
     get:
       tags: [threads]
@@ -188,9 +189,10 @@ paths:
           $ref: '#/components/responses/NotFound'
 
   # ============ POSTS ============
-  /threads/{thread_id}/posts:
+  /boards/{slug}/threads/{thread_number}/posts:
     parameters:
-      - $ref: '#/components/parameters/ThreadId'
+      - $ref: '#/components/parameters/BoardSlug'
+      - $ref: '#/components/parameters/ThreadNumber'
 
     post:
       tags: [posts]
@@ -214,9 +216,10 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /posts/{post_id}:
+  /boards/{slug}/posts/{post_number}:
     parameters:
-      - $ref: '#/components/parameters/PostId'
+      - $ref: '#/components/parameters/BoardSlug'
+      - $ref: '#/components/parameters/PostNumber'
 
     delete:
       tags: [posts, admin]
@@ -368,16 +371,16 @@ components:
         minLength: 1
         maxLength: 10
 
-    ThreadId:
-      name: thread_id
+    ThreadNumber:
+      name: thread_number
       in: path
       required: true
       schema:
         type: integer
         format: int64
 
-    PostId:
-      name: post_id
+    PostNumber:
+      name: post_number
       in: path
       required: true
       schema:
@@ -426,9 +429,9 @@ components:
     # ---- Thread ----
     Thread:
       type: object
-      required: [id, board_slug, op_post, created_at]
+      required: [post_number, board_slug, op_post, created_at]
       properties:
-        id:
+        post_number:
           type: integer
           format: int64
         board_slug:
@@ -446,9 +449,9 @@ components:
 
     ThreadPreview:
       type: object
-      required: [id, board_slug, op_post, post_count, created_at]
+      required: [post_number, board_slug, op_post, post_count, created_at]
       properties:
-        id:
+        post_number:
           type: integer
           format: int64
         board_slug:
@@ -459,7 +462,6 @@ components:
           type: integer
         omitted_posts:
           type: integer
-          description: Number of posts not shown in preview
         last_posts:
           type: array
           items:
@@ -473,9 +475,9 @@ components:
 
     ThreadDetail:
       type: object
-      required: [id, board_slug, op_post, posts, created_at]
+      required: [post_number, board_slug, op_post, posts, created_at]
       properties:
-        id:
+        post_number:
           type: integer
           format: int64
         board_slug:
@@ -523,14 +525,17 @@ components:
     # ---- Post ----
     Post:
       type: object
-      required: [id, thread_id, name, text, created_at]
+      required: [post_number, board_slug, name, text, created_at]
       properties:
-        id:
+        post_number:
           type: integer
           format: int64
-        thread_id:
+        board_slug:
+          type: string
+        thread_number:
           type: integer
           format: int64
+          description: null if this post is the OP
         name:
           type: string
           example: "Anonymous"
@@ -594,11 +599,13 @@ components:
 
     LoginResponse:
       type: object
-      required: [token]
+      required: [token, expires_at]
       properties:
         token:
           type: string
-          description: JWT token
+        expires_at:
+          type: string
+          format: date-time
 
     ChangePasswordRequest:
       type: object
