@@ -5,6 +5,8 @@ use tracing::{info, warn};
 mod config;
 mod domain;
 mod repositories;
+mod services;
+mod api;
 
 // mod services;
 // mod api;
@@ -13,6 +15,8 @@ use config::Config;
 use repositories::postgres::{PostgresAdminRepository, PostgresBoardRepository, PostgresPostRepository};
 use repositories::disk::DiskImageRepository;
 use repositories::AdminRepository;
+use services::{AuthServiceImpl, BoardServiceImpl, ImageServiceImpl, PostServiceImpl};
+use api::state::AppState;
 
 #[tokio::main]
 async fn main() {
@@ -81,17 +85,27 @@ async fn main() {
     // seed default admin if none exists
     seed_admin(&*admin_repo).await;
 
-    // let services = Services::new(admin_repo, board_repo, post_repo, image_repo, &config);
-    // let app = api::router::build_router(services, config.clone());
-    
-    // let listener = tokio::net::TcpListener::bind(config.server.addr())
-    //     .await
-    //     .expect("failed to bind");
+    // services
+    let auth = Arc::new(AuthServiceImpl::new(admin_repo.clone(), &config));
+    let images = Arc::new(ImageServiceImpl::new(image_repo.clone()));
+    let boards = Arc::new(BoardServiceImpl::new(board_repo.clone(), post_repo.clone()));
+    let posts = Arc::new(PostServiceImpl::new(board_repo.clone(), post_repo.clone(), images.clone()));
 
-    // info!(addr = %config.server.addr(), "listening");
-    // axum::serve(listener, app).await.expect("server error");
+    let state = AppState {
+        auth,
+        boards,
+        posts,
+        images,
+    };
 
-    info!("repositories initialized");
+    let app = api::router::build_router(state);
+
+    let listener = tokio::net::TcpListener::bind(config.server.addr())
+        .await
+        .expect("failed to bind");
+
+    info!(addr = %config.server.addr(), "listening");
+    axum::serve(listener, app).await.expect("server error");
 }
 
 async fn seed_admin(admin_repo: &dyn AdminRepository) {
