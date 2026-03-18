@@ -35,6 +35,10 @@ image = "0.25"
 
 # Utils
 uuid = { version = "1", features = ["v4"] }
+config = "0.14"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+bcrypt = "0.15"
 
 [dev-dependencies]
 testcontainers = "0.23"

@@ -46,8 +46,6 @@ async fn create_test_board(board_repo: &PostgresBoardRepository, slug: &str) -> 
         .id
 }
 
-// ---- create_thread ----
-
 #[tokio::test]
 async fn test_create_thread() {
     let (pool, _c) = setup_test_db().await;
@@ -78,8 +76,6 @@ async fn test_create_thread_post_number_increments() {
 
     assert!(p2.post_number > p1.post_number);
 }
-
-// ---- create_reply ----
 
 #[tokio::test]
 async fn test_create_reply() {
@@ -112,8 +108,6 @@ async fn test_create_reply_to_nonexistent_thread_fails() {
     assert!(matches!(err, DomainError::PostNotFound(_)));
 }
 
-// ---- find_by_id ----
-
 #[tokio::test]
 async fn test_find_by_id_found() {
     let (pool, _c) = setup_test_db().await;
@@ -138,8 +132,6 @@ async fn test_find_by_id_not_found() {
     let found = post_repo.find_by_id(id).await.unwrap();
     assert!(found.is_none());
 }
-
-// ---- delete ----
 
 #[tokio::test]
 async fn test_delete_post() {
@@ -187,8 +179,6 @@ async fn test_delete_nonexistent_post_errors() {
     assert!(matches!(err, DomainError::PostNotFound(_)));
 }
 
-// ---- exists / is_thread ----
-
 #[tokio::test]
 async fn test_exists() {
     let (pool, _c) = setup_test_db().await;
@@ -221,8 +211,6 @@ async fn test_is_thread() {
     assert!(!post_repo.is_thread(reply_id).await.unwrap());
 }
 
-// ---- count_threads ----
-
 #[tokio::test]
 async fn test_count_threads() {
     let (pool, _c) = setup_test_db().await;
@@ -237,8 +225,6 @@ async fn test_count_threads() {
     assert_eq!(post_repo.count_threads(board_id).await.unwrap(), 2);
 }
 
-// ---- delete_by_board ----
-
 #[tokio::test]
 async fn test_delete_by_board() {
     let (pool, _c) = setup_test_db().await;
@@ -252,8 +238,6 @@ async fn test_delete_by_board() {
 
     assert_eq!(post_repo.count_threads(board_id).await.unwrap(), 0);
 }
-
-// ---- find_thread_detail ----
 
 #[tokio::test]
 async fn test_find_thread_detail() {
@@ -284,8 +268,6 @@ async fn test_find_thread_detail_not_found() {
     let result = post_repo.find_thread_detail(id).await.unwrap();
     assert!(result.is_none());
 }
-
-// ---- find_thread_previews ----
 
 #[tokio::test]
 async fn test_find_thread_previews_basic() {
