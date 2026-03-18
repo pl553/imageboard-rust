@@ -2,6 +2,7 @@ mod admin;
 mod board;
 mod post;
 mod image;
+pub mod disk;
 pub mod postgres;
 
 pub use admin::AdminRepository;
