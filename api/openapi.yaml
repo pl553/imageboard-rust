@@ -609,8 +609,12 @@ components:
 
     ChangePasswordRequest:
       type: object
-      required: [new_password]
+      required: [current_password, new_password]
       properties:
+        current_password:
+          type: string
+          format: password
+          minLength: 1
         new_password:
           type: string
           format: password
