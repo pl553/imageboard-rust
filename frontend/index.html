@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imageboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <a href="#" onclick="showHome()" class="site-title">☰ Boards</a>
+    <nav id="board-nav"></nav>
+    <div class="header-right">
+        <span id="admin-indicator" style="display:none">
+            <span class="admin-badge">Admin</span>
+            <button onclick="logout()" class="btn-small">logout</button>
+        </span>
+        <button onclick="showLoginModal()" id="login-btn" class="btn-small">login</button>
+    </div>
+</header>
+
+<main id="app">
+    <div id="home-view">
+        <h2>Welcome</h2>
+        <p>Select a board from the top navigation.</p>
+        <div id="boards-list"></div>
+    </div>
+</main>
+
+<!-- Login modal -->
+<div id="login-modal" class="modal" style="display:none">
+    <div class="modal-box">
+        <h3>Admin Login</h3>
+        <div id="login-error" class="error-msg" style="display:none"></div>
+        <input type="text" id="login-username" placeholder="username" />
+        <input type="password" id="login-password" placeholder="password" />
+        <div class="modal-actions">
+            <button onclick="doLogin()" class="btn-primary">login</button>
+            <button onclick="closeModal('login-modal')" class="btn-secondary">cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create board modal (admin) -->
+<div id="create-board-modal" class="modal" style="display:none">
+    <div class="modal-box">
+        <h3>Create Board</h3>
+        <div id="create-board-error" class="error-msg" style="display:none"></div>
+        <input type="text" id="new-board-slug" placeholder="slug (e.g. g, tv, an)" maxlength="10" />
+        <input type="text" id="new-board-name" placeholder="name (e.g. Technology)" maxlength="100" />
+        <textarea id="new-board-desc" placeholder="description (optional)" maxlength="500"></textarea>
+        <div class="modal-actions">
+            <button onclick="doCreateBoard()" class="btn-primary">create</button>
+            <button onclick="closeModal('create-board-modal')" class="btn-secondary">cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Create thread modal -->
+<div id="create-thread-modal" class="modal" style="display:none">
+    <div class="modal-box">
+        <h3>New Thread</h3>
+        <div id="create-thread-error" class="error-msg" style="display:none"></div>
+        <input type="text" id="thread-name" placeholder="name (default: Anonymous)" maxlength="100" />
+        <textarea id="thread-text" placeholder="post text" maxlength="10000" required></textarea>
+        <label class="file-label">
+            image (optional)
+            <input type="file" id="thread-image" accept="image/*" />
+        </label>
+        <div class="modal-actions">
+            <button onclick="doCreateThread()" class="btn-primary">post</button>
+            <button onclick="closeModal('create-thread-modal')" class="btn-secondary">cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reply modal -->
+<div id="reply-modal" class="modal" style="display:none">
+    <div class="modal-box">
+        <h3>Reply</h3>
+        <div id="reply-error" class="error-msg" style="display:none"></div>
+        <input type="text" id="reply-name" placeholder="name (default: Anonymous)" maxlength="100" />
+        <textarea id="reply-text" placeholder="post text" maxlength="10000" required></textarea>
+        <label class="file-label">
+            image (optional)
+            <input type="file" id="reply-image" accept="image/*" />
+        </label>
+        <div class="modal-actions">
+            <button onclick="doCreateReply()" class="btn-primary">post</button>
+            <button onclick="closeModal('reply-modal')" class="btn-secondary">cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Change password modal -->
+<div id="change-password-modal" class="modal" style="display:none">
+    <div class="modal-box">
+        <h3>Change Password</h3>
+        <div id="change-password-error" class="error-msg" style="display:none"></div>
+        <input type="password" id="current-password" placeholder="current password" />
+        <input type="password" id="new-password" placeholder="new password (min 8 chars)" />
+        <div class="modal-actions">
+            <button onclick="doChangePassword()" class="btn-primary">change</button>
+            <button onclick="closeModal('change-password-modal')" class="btn-secondary">cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Image lightbox -->
+<div id="lightbox" class="modal" style="display:none" onclick="closeModal('lightbox')">
+    <div class="lightbox-box">
+        <img id="lightbox-img" src="" alt="full image" />
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

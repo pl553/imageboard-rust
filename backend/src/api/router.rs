@@ -2,6 +2,7 @@ use axum::routing::{delete, get, post};
 use axum::Router;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
+use tower_http::services::ServeDir;
 
 use crate::api::handlers;
 use crate::api::state::AppState;
@@ -33,6 +34,7 @@ pub fn build_router(state: AppState) -> Router {
                 .route("/images/{filename}", get(handlers::images::get_image))
                 .route("/images/thumb/{filename}", get(handlers::images::get_thumbnail)),
         )
+        .fallback_service(ServeDir::new("../frontend"))
         .with_state(state)
         .layer(cors)
         .layer(TraceLayer::new_for_http())
